@@ -25,80 +25,71 @@
 
 #include "arduino_freertos.h"
 #include "avr/pgmspace.h"
-
+#include <Arduino.h>
 #include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BNO055.h>
-#include <utility/imumaths.h>
+#include <VL53L0X.h>
 
-/* Set the delay between fresh samples */
-#define BNO055_SAMPLERATE_DELAY_MS (100)
-
-// Check I2C device address and correct line below (by default address is 0x29 or 0x28)
-//                                   id, address
-Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+VL53L0X sensor;
 
 static void task1(void*) {
     while (true) {
-        digitalWriteFast(arduino::LED_BUILTIN, arduino::LOW);
+        ::digitalWriteFast(arduino::LED_BUILTIN, arduino::LOW);
         ::vTaskDelay(pdMS_TO_TICKS(500));
 
-        digitalWriteFast(arduino::LED_BUILTIN, arduino::HIGH);
+        ::digitalWriteFast(arduino::LED_BUILTIN, arduino::HIGH);
         ::vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
 
 static void task2(void*) {
     while (true) {
-        /* Get a new sensor event */
-        sensors_event_t event;
-        bno.getEvent(&event);
+        ::Serial.println("TICK");
+        ::vTaskDelay(pdMS_TO_TICKS(1000));
 
-        /* The processing sketch expects data as roll, pitch, heading */
-        Serial.print("Orientation: ");
-        Serial.print((float)event.orientation.x);
-        Serial.print(" ");
-        Serial.print((float)event.orientation.y);
-        Serial.print(" ");
-        Serial.print((float)event.orientation.z);
-        Serial.println();
+        ::Serial.println("TOCK");
+        ::vTaskDelay(pdMS_TO_TICKS(1000));
 
-        ::vTaskDelay(pdMS_TO_TICKS(BNO055_SAMPLERATE_DELAY_MS));
+        ::Serial.print(sensor.readRangeContinuousMillimeters());
+        if (sensor.timeoutOccurred()) {::Serial.print(" TIMEOUT"); }
+
+        ::Serial.println();
     }
 }
 
 FLASHMEM __attribute__((noinline)) void setup() {
-    Serial.begin(115'200);
-    Wire.begin();
-    /* Initialise the sensor */
-    if(!bno.begin())
-    {
-        /* There was a problem detecting the BNO055 ... check your connections */
-        Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-        while(1);
+    ::Serial.begin(115'200);
+    ::pinMode(arduino::LED_BUILTIN, arduino::OUTPUT);
+    ::digitalWriteFast(arduino::LED_BUILTIN, arduino::HIGH);
+
+    ::delay(100);
+
+    if (CrashReport) {
+        ::Serial.print(CrashReport);
+        ::Serial.println();
+        ::Serial.flush();
     }
-    
-    delay(1000);
 
-    /* Use external crystal for better accuracy */
-    bno.setExtCrystalUse(true);
+    ::Serial.println(PSTR("\r\nBooting FreeRTOS kernel " tskKERNEL_VERSION_NUMBER ". Built by gcc " __VERSION__ " (newlib " _NEWLIB_VERSION ") on " __DATE__ ". ***\r\n"));
 
-    pinMode(arduino::LED_BUILTIN, arduino::OUTPUT);
-    digitalWriteFast(arduino::LED_BUILTIN, arduino::HIGH);
+    ::Wire.begin();
 
-    delay(5000);
-
-    Serial.println(PSTR("\r\nRunning FreeRTOS kernel " tskKERNEL_VERSION_NUMBER ". Built by gcc " __VERSION__ "."));
+    ::sensor.setTimeout(500);
+    if (!::sensor.init())
+    {
+        while (1) {
+            ::Serial.println("Failed to detect and initialize sensor!");
+            ::vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+    }
+    sensor.startContinuous();
 
     ::xTaskCreate(task1, "task1", 128, nullptr, 2, nullptr);
-    ::xTaskCreate(task2, "task2", 128, nullptr, 2, nullptr);
+    ::xTaskCreate(task2, "task2", 2048, nullptr, 2, nullptr);
 
-    Serial.println("setup(): starting scheduler...");
-    Serial.flush();
+    ::Serial.println("setup(): starting scheduler...");
+    ::Serial.flush();
 
     ::vTaskStartScheduler();
-
-
 }
 
 void loop() {}
