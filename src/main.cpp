@@ -1,53 +1,18 @@
-/*
- * This file is part of the FreeRTOS port to Teensy boards.
- * Copyright (c) 2020 Timo Sandmann
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library. If not, see <http://www.gnu.org/licenses/>.
- */
-
-/**
- * @file    main.cpp
- * @brief   FreeRTOS example for Teensy boards
- * @author  Timo Sandmann
- * @date    17.05.2020
- */
-
 #include "arduino_freertos.h"
 #include "avr/pgmspace.h"
-#include <Arduino.h>
 #include <Wire.h>
 #include <VL53L0X.h>
+#include "../lib/task1.h"
 
 VL53L0X sensor;
 
-static void task1(void*) {
-    while (true) {
-        ::digitalWriteFast(arduino::LED_BUILTIN, arduino::LOW);
-        ::vTaskDelay(pdMS_TO_TICKS(500));
-
-        ::digitalWriteFast(arduino::LED_BUILTIN, arduino::HIGH);
-        ::vTaskDelay(pdMS_TO_TICKS(500));
-    }
-}
-
 static void task2(void*) {
     while (true) {
-        ::Serial.println("TICK");
-        ::vTaskDelay(pdMS_TO_TICKS(1000));
+        // ::Serial.println("TICK");
+        // ::vTaskDelay(pdMS_TO_TICKS(500));
 
-        ::Serial.println("TOCK");
-        ::vTaskDelay(pdMS_TO_TICKS(1000));
+        // ::Serial.println("TOCK");
+        // ::vTaskDelay(pdMS_TO_TICKS(500));
 
         ::Serial.print(sensor.readRangeContinuousMillimeters());
         if (sensor.timeoutOccurred()) {::Serial.print(" TIMEOUT"); }
