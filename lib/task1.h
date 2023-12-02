@@ -1,6 +1,8 @@
 #include "arduino_freertos.h"
 #include "avr/pgmspace.h"
 
+extern TaskHandle_t task2h;
+
 void task1(void*) {
     while (true) {
         ::digitalWriteFast(arduino::LED_BUILTIN, arduino::LOW);

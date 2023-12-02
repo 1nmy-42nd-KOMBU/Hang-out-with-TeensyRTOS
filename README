@@ -1,0 +1,5 @@
+# FreeRTOSの勉強をするよ
+
+# 環境
+エディタ: PlatformIO
+FreeRTOS: https://github.com/tsandmann/freertos-teensy

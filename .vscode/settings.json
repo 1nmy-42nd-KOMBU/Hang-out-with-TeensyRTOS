@@ -1,0 +1,6 @@
+{
+    "vscode-pets.throwBallWithMouse": true,
+    "vscode-pets.petSize": "small",
+    "vscode-pets.theme": "forest",
+    "cmake.configureOnOpen": false
+}
